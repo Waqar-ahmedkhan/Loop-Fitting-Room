@@ -1,0 +1,1100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#e9e4dc" />
+  <meta name="description" content="VirtualFit — a spatial virtual try-on experience." />
+  <title>VirtualFit: Spatial Try-On</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://images.higgs.ai" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js" crossorigin />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23e9e4dc'/%3E%3Ctext x='50' y='68' font-family='Arial,sans-serif' font-size='48' font-weight='700' text-anchor='middle' fill='%23171717'%3EVF%3C/text%3E%3C/svg%3E" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+  <meta property="og:title" content="VirtualFit: Spatial Try-On" />
+  <meta property="og:description" content="A spatial virtual try-on experience." />
+  <meta property="og:type" content="website" />
+  <style>
+    :root {
+      --ease: cubic-bezier(.2,.8,.2,1);
+      --sans: "Inter", system-ui, -apple-system, sans-serif;
+      --ink: #171717;
+      --glass: linear-gradient(155deg, rgba(250,248,245,.38), rgba(150,144,136,.22) 48%, rgba(205,200,192,.28));
+      --glass-border: rgba(255,255,255,.56);
+      --room: url("https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261104_080623_c94c85a3-23d5-4a0c-afff-41be1b5b8191.png&w=2400&q=85");
+      --model: url("https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261104_080717_e02cb856-b812-4c9b-9b86-8a741c7f65eb.png&w=2688&q=85");
+      --garm: url("https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261104_080719_f5a4cca2-cf42-4957-ab3b-ddec34d2b71a.png&w=2048&q=85");
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body {
+      background: #e9e4dc;
+      color: #fff;
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      user-select: none;
+      overscroll-behavior: none;
+    }
+    button { border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+    button:focus-visible { outline: 2px solid rgba(255,255,255,.95); outline-offset: 3px; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+    }
+    .noscript {
+      position: fixed; inset: 0; z-index: 200; display: grid; place-items: center;
+      padding: 24px; text-align: center; background: #e9e4dc; color: var(--ink); font-size: 14px;
+    }
+    @media (pointer:fine) { html.has-custom-cursor, html.has-custom-cursor body, html.has-custom-cursor button { cursor: none; } }
+
+    .room {
+      position: fixed; inset: -3%; z-index: 0;
+      background: var(--room) center / cover no-repeat;
+      filter: blur(2.5px) saturate(1.05);
+      transform: scale(1.08);
+      will-change: transform;
+    }
+    .room::after {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(70% 60% at 50% 45%, rgba(255,252,246,.10), rgba(40,30,20,.16));
+    }
+    .shade {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background: linear-gradient(180deg, rgba(28,24,20,.03), transparent 35%, rgba(24,20,18,.08));
+    }
+    .ghost {
+      position: fixed; z-index: 2; left: 50%; top: 8%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: .005em;
+      color: rgba(255,255,255,.30);
+      font-size: min(32.5vw, 42vh); font-weight: 900; line-height: .8; letter-spacing: -.065em;
+      white-space: nowrap; pointer-events: none;
+      -webkit-text-stroke: 1px rgba(255,255,255,.35);
+      text-shadow: 0 1px 0 rgba(255,255,255,.35);
+      will-change: transform;
+    }
+    .ghost span { display: inline-block; transition: transform 1.2s var(--ease); }
+    .ghost span:nth-child(1) { transition-delay: .02s; }
+    .ghost span:nth-child(2) { transition-delay: .08s; }
+    .ghost span:nth-child(3) { transition-delay: .14s; }
+
+    #scene { position: fixed; inset: 0; z-index: 10; width: 100%; height: 100%; display: block; touch-action: pan-y; outline: none; }
+    .glass {
+      background: var(--glass);
+      -webkit-backdrop-filter: blur(22px) saturate(1.5);
+      backdrop-filter: blur(22px) saturate(1.5);
+      border: 1px solid var(--glass-border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.7), inset 0 -1px 0 rgba(255,255,255,.12), 0 20px 50px -24px rgba(40,30,20,.45);
+    }
+    .tabs {
+      position: fixed; z-index: 40; top: 4.2vh; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 2px; padding: 5px; border-radius: 999px;
+      white-space: nowrap;
+    }
+    .tab {
+      position: relative; z-index: 1; height: 38px; padding: 0 22px; border-radius: 999px;
+      color: rgba(30,30,32,.74); font-size: 14px; font-weight: 500; transition: color .35s var(--ease);
+    }
+    .tab.active { color: #111; }
+    .tab-indicator {
+      position: absolute; z-index: 0; left: 5px; top: 5px; height: 38px; width: 86px;
+      border-radius: 999px; background: rgba(255,255,255,.92);
+      box-shadow: 0 4px 14px -6px rgba(0,0,0,.3);
+      transition: transform .6s var(--ease), width .6s var(--ease);
+    }
+    .rail {
+      position: fixed; z-index: 40; left: max(18px,1.8vw); top: 50%; transform: translateY(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 8px; border-radius: 999px;
+    }
+    .rail-btn {
+      width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
+      color: rgba(30,30,32,.82); transition: background .3s var(--ease), color .3s var(--ease), transform .3s var(--ease);
+    }
+    .rail-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .rail-btn.active { color: #111; background: rgba(255,255,255,.9); }
+    .rail-btn:hover { background: rgba(255,255,255,.35); }
+    .rail-btn:active { transform: scale(.92); }
+
+    .arrow {
+      position: fixed; z-index: 35; top: 50%; transform: translateY(-50%);
+      width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
+      color: #222; transition: transform .3s var(--ease), background .3s var(--ease);
+    }
+    .arrow:hover { transform: translateY(-50%) scale(1.08); background: rgba(255,255,255,.48); }
+    .arrow svg { width: 17px; height: 17px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .arrow-left { left: calc(max(18px,1.8vw) + 76px); }
+    .arrow-right { right: max(18px,1.8vw); }
+
+    .buy {
+      position: fixed; z-index: 50; left: 50%; bottom: 4.6vh; transform: translateX(-50%);
+      width: min(640px, calc(100vw - 32px)); min-height: 90px; padding: 12px 22px 12px 12px;
+      border-radius: 24px; display: flex; align-items: center; gap: 18px;
+      color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.18);
+    }
+    .thumb {
+      width: 64px; height: 64px; flex: 0 0 64px; border-radius: 14px;
+      background-color: rgba(255,255,255,.3); background-repeat: no-repeat;
+      background-size: 320% 212.5%; overflow: hidden; position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.45);
+    }
+    .buy-main { min-width: 138px; flex: 1 1 auto; }
+    .roll-window { height: 1.25em; overflow: hidden; position: relative; }
+    .buy-name { font-size: 16px; font-weight: 600; line-height: 1.25; white-space: nowrap; }
+    .buy-price { margin-top: 4px; font-size: 14px; font-weight: 500; opacity: .9; }
+    .roll-window.roll .buy-name, .roll-window.roll .buy-price { animation: rollOut .62s var(--ease) both; }
+    @keyframes rollOut { to { transform: translateY(-110%); opacity: 0; } }
+    .buy-options { display: flex; align-items: center; gap: 18px; }
+    .option-label { font-size: 11px; font-weight: 500; opacity: .85; margin-bottom: 7px; white-space: nowrap; }
+    .sizes { display: flex; gap: 5px; }
+    .size-chip {
+      width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.22);
+      color: #fff; font-size: 11px; font-weight: 600; transition: transform .25s var(--ease), background .25s var(--ease), color .25s var(--ease);
+    }
+    .size-chip.active { background: #fff; color: #111; }
+    .size-chip:active { transform: scale(.9); }
+    .colors { display: flex; gap: 9px; align-items: center; }
+    .color-dot {
+      width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(255,255,255,.45);
+      position: relative; flex: 0 0 18px; transition: transform .25s var(--ease);
+    }
+    .color-dot.active::after { content: ""; position: absolute; inset: -4px; border: 2px solid rgba(255,255,255,.95); border-radius: 50%; box-shadow: 0 0 0 2px rgba(0,0,0,.12); }
+    .color-dot:active { transform: scale(.88); }
+    .buy-color-label { max-width: 125px; overflow: hidden; text-overflow: ellipsis; }
+    .buy-cta {
+      height: 42px; padding: 0 17px; border-radius: 999px; color: #161616; background: rgba(255,255,255,.94);
+      font-size: 12px; font-weight: 700; letter-spacing: .01em; white-space: nowrap;
+      transition: transform .25s var(--ease), background .25s var(--ease);
+    }
+    .buy-cta:hover { transform: translateY(-2px); background: #fff; }
+    .buy-cta:active { transform: scale(.96); }
+
+    .cur {
+      position: fixed; z-index: 100; left: 0; top: 0; width: 58px; height: 58px; border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,.95); background: rgba(255,255,255,.18);
+      box-shadow: 0 6px 20px -8px rgba(0,0,0,.35); pointer-events: none;
+      display: none; place-items: center; transform: translate3d(-100px,-100px,0) scale(1);
+      transition: width .5s var(--ease), height .5s var(--ease), background .5s var(--ease), border-color .5s var(--ease);
+      will-change: transform;
+    }
+    .has-custom-cursor .cur { display: grid; }
+    .cur-dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; transition: opacity .4s var(--ease); }
+    .cur-label { position: absolute; font-size: 9px; font-weight: 700; letter-spacing: .12em; color: #111; opacity: 0; transform: scale(.65); transition: opacity .45s var(--ease), transform .45s var(--ease); }
+    .cur.try { background: rgba(255,255,255,.92); transform-origin: center; }
+    .cur.try .cur-dot, .cur.drag .cur-dot { opacity: 0; }
+    .cur.try .try-label, .cur.drag .drag-label { opacity: 1; transform: scale(1); }
+    .cur.drag { background: rgba(255,255,255,.22); transform-origin: center; }
+    .cur.drag .drag-label { color: #fff; }
+    .cur.btn { background: rgba(255,255,255,.42); border-color: #fff; transform-origin: center; }
+    .cur.btn .cur-dot { opacity: .35; }
+    .loading {
+      position: fixed; z-index: 90; left: 50%; top: 50%; transform: translate(-50%,-50%);
+      color: rgba(30,27,24,.72); font-size: 10px; letter-spacing: .22em; font-weight: 700;
+      text-transform: uppercase; text-shadow: 0 1px 10px rgba(255,255,255,.55); transition: opacity .5s ease;
+    }
+    .loading.hidden { opacity: 0; pointer-events: none; }
+    .hint {
+      position: fixed; z-index: 30; right: 24px; top: 50%; transform: translateY(-50%);
+      color: rgba(255,255,255,.72); font-size: 9px; font-weight: 600; letter-spacing: .16em;
+      writing-mode: vertical-rl; text-shadow: 0 1px 8px rgba(0,0,0,.25); pointer-events: none;
+    }
+
+    @media (max-width: 767px) {
+      :root { --room: url("https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261104_080623_c94c85a3-23d5-4a0c-afff-41be1b5b8191.png&w=1400&q=80"); }
+      .glass { -webkit-backdrop-filter: blur(12px) saturate(1.35); backdrop-filter: blur(12px) saturate(1.35); }
+      .has-custom-cursor .cur { display: none; }
+      .ghost { top: 19%; font-size: min(54vw, 30vh); }
+      .tabs { top: max(14px, env(safe-area-inset-top)); max-width: calc(100vw - 20px); overflow-x: auto; justify-content: flex-start; scrollbar-width: none; }
+      .tabs::-webkit-scrollbar { display: none; }
+      .tab { height: 32px; padding: 0 13px; font-size: 12px; }
+      .tab-indicator { height: 32px; }
+      .rail { left: 10px; top: auto; bottom: calc(4.6vh + 150px); transform: none; gap: 7px; padding: 6px; }
+      .rail-btn { width: 34px; height: 34px; }
+      .rail-btn svg { width: 17px; height: 17px; }
+      .arrow { display: none; }
+      .buy { bottom: max(12px, env(safe-area-inset-bottom)); padding: 10px; gap: 10px; flex-wrap: wrap; border-radius: 20px; min-height: 0; }
+      .thumb { width: 54px; height: 54px; flex-basis: 54px; }
+      .buy-main { min-width: 0; flex: 1; }
+      .buy-name { font-size: 14px; }
+      .buy-price { font-size: 12px; }
+      .buy-options { flex: 1 1 100%; justify-content: space-between; gap: 8px; padding-left: 64px; }
+      .option-label { font-size: 10px; margin-bottom: 5px; }
+      .size-chip { width: 27px; height: 27px; }
+      .colors { gap: 7px; }
+      .color-dot { width: 16px; height: 16px; flex-basis: 16px; }
+      .buy-cta { height: 34px; padding: 0 13px; font-size: 10px; }
+      .hint { display: none; }
+      .cur { display: none; }
+    }
+    @media (max-width: 430px) {
+      .tab { padding: 0 9px; font-size: 11.5px; }
+    }
+    @media (max-width: 390px) {
+      .buy-options { padding-left: 0; flex-wrap: wrap; row-gap: 8px; }
+      .buy-cta { height: 32px; padding: 0 12px; font-size: 10px; }
+      .option-label { font-size: 9px; }
+      .colors { gap: 6px; }
+    }
+    @media (max-width: 370px) {
+      .tab { padding: 0 8px; font-size: 11px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="sr-only">VirtualFit — Spatial Try-On</h1>
+  <noscript><div class="noscript">VirtualFit needs JavaScript and WebGL to run. Please enable JavaScript or try a modern browser.</div></noscript>
+  <div class="room" id="room"></div>
+  <div class="shade"></div>
+  <div class="ghost" id="ghost" aria-hidden="true"><span>F</span><span>I</span><span>T</span></div>
+  <canvas id="scene" aria-label="Interactive 3D garment carousel. Drag to explore and select an outfit.">Your browser does not support the interactive 3D experience.</canvas>
+  <div class="loading" id="loading" role="status">Preparing your fitting room</div>
+
+  <nav class="tabs glass" aria-label="Product categories">
+    <span class="tab-indicator" id="tabIndicator"></span>
+    <button class="tab active" data-tab="Tops" aria-pressed="true">Tops</button>
+    <button class="tab" data-tab="Bottoms" aria-pressed="false">Bottoms</button>
+    <button class="tab" data-tab="Outerwear" aria-pressed="false">Outerwear</button>
+    <button class="tab" data-tab="Shoes" aria-pressed="false">Shoes</button>
+    <button class="tab" data-tab="Accessories" aria-pressed="false">Accessories</button>
+  </nav>
+
+  <aside class="rail glass" aria-label="Quick tools">
+    <button class="rail-btn active" aria-label="Clothing" title="Clothing" aria-pressed="true">
+      <svg viewBox="0 0 24 24"><path d="m8 4 4-2 4 2 5 3-2.2 4-2.8-1.5V21H8V9.5L5.2 11 3 7z" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <button class="rail-btn" aria-label="Shopping bag" title="Shopping bag" aria-pressed="false">
+      <svg viewBox="0 0 24 24"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg>
+    </button>
+    <button class="rail-btn" aria-label="Appointments" title="Appointments" aria-pressed="false">
+      <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M7.5 3v4M16.5 3v4M3.5 9.5h17M8 13h2m4 0h2M8 17h2"/></svg>
+    </button>
+    <button class="rail-btn" aria-label="Profile" title="Profile" aria-pressed="false">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg>
+    </button>
+  </aside>
+
+  <button class="arrow arrow-left glass" id="prev" aria-label="Previous garment"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+  <button class="arrow arrow-right glass" id="next" aria-label="Next garment"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+  <div class="hint" aria-hidden="true">DRAG TO EXPLORE · SELECT TO TRY ON</div>
+
+  <section class="buy glass" aria-label="Selected garment details">
+    <div class="thumb" id="thumb" aria-hidden="true"></div>
+    <div class="buy-main" aria-live="polite" aria-atomic="true">
+      <div class="roll-window" id="nameWindow"><div class="buy-name" id="buyName">Basic T-shirt</div></div>
+      <div class="roll-window" id="priceWindow"><div class="buy-price" id="buyPrice">$45</div></div>
+    </div>
+    <div class="buy-options">
+      <div class="size-group">
+        <div class="option-label">Size</div>
+        <div class="sizes" id="sizes">
+          <button class="size-chip" data-size="S" aria-pressed="false">S</button>
+          <button class="size-chip active" data-size="M" aria-pressed="true">M</button>
+          <button class="size-chip" data-size="L" aria-pressed="false">L</button>
+          <button class="size-chip" data-size="XL" aria-pressed="false">XL</button>
+        </div>
+      </div>
+      <div class="color-group">
+        <div class="option-label buy-color-label" id="colorLabel">Color · White</div>
+        <div class="colors" id="colors"></div>
+      </div>
+      <button class="buy-cta" id="addToBag">Add to bag</button>
+    </div>
+  </section>
+
+  <div class="cur" id="cursor" aria-hidden="true">
+    <span class="cur-dot"></span><span class="cur-label try-label">TRY ON</span><span class="cur-label drag-label">DRAG</span>
+  </div>
+
+  <script type="module">
+    const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
+    let THREE = null;
+
+    const isMobile = () => window.innerWidth <= 767;
+    const finePointer = window.matchMedia('(pointer: fine)').matches;
+    let mobile = isMobile();
+
+    const SOURCE = {
+      model: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20261104_080717_e02cb856-b812-4c9b-9b86-8a741c7f65eb.png',
+      garments: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20261104_080719_f5a4cca2-cf42-4957-ab3b-ddec34d2b71a.png'
+    };
+    const imgUrl = (name, width, quality = 85) =>
+      `https://images.higgs.ai/?default=1&output=webp&url=${encodeURIComponent(SOURCE[name])}&w=${width}&q=${quality}`;
+    const ASSETS = {
+      garments: imgUrl('garments', mobile ? 1400 : 2048, mobile ? 80 : 85),
+      model: imgUrl('model', mobile ? 1200 : 2688, mobile ? 80 : 85)
+    };
+
+    const ITEMS = [
+      { n: 'Basic T-shirt', p: 45, g: [1.14, 3.06], m: .37, c: [['White','#f4f2ee'],['Ash','#c9c7c2'],['Charcoal','#3b3c3f'],['Navy','#27324d']] },
+      { n: 'Basic Sweater', p: 105, g: [49.7, 1.39], m: 25.0, c: [['White','#f6f4ef'],['Oat','#ddd3c2'],['Sage','#b9c2ae'],['Black','#1f1f21']] },
+      { n: 'Linen Shirt', p: 95, g: [98.2, 3.33], m: 49.86, c: [['White','#f7f6f1'],['Sand','#d9ccb4'],['Sky','#bcd0e2'],['Olive','#717556']] },
+      { n: 'Grey Hoodie', p: 110, g: [1.14, 93.3], m: 74.77, c: [['Heather','#a9a9a8'],['Bone','#e6e1d6'],['Forest','#33463a'],['Black','#1f1f21']] },
+      { n: 'Ringer Tee', p: 55, g: [49.7, 95.3], m: 99.35, c: [['White / Black','#f4f2ee'],['Cream / Navy','#efe6d3'],['Grey / Red','#c9c7c2'],['White / Green','#e9efe8']] }
+    ];
+
+    const canvas = document.getElementById('scene');
+    const loading = document.getElementById('loading');
+    const roomEl = document.getElementById('room');
+    const ghostEl = document.getElementById('ghost');
+    const cursorEl = document.getElementById('cursor');
+    const thumbEl = document.getElementById('thumb');
+    const buyNameEl = document.getElementById('buyName');
+    const buyPriceEl = document.getElementById('buyPrice');
+    const nameWindow = document.getElementById('nameWindow');
+    const priceWindow = document.getElementById('priceWindow');
+    const colorLabel = document.getElementById('colorLabel');
+    const colorsEl = document.getElementById('colors');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ghostLetters = [...ghostEl.children];
+    const sizeButtons = [...document.querySelectorAll('.size-chip')];
+    const tabButtons = [...document.querySelectorAll('.tab')];
+    const railButtons = [...document.querySelectorAll('.rail-btn')];
+    const tabsNav = document.querySelector('.tabs');
+    const indicator = document.getElementById('tabIndicator');
+    const addToBagBtn = document.getElementById('addToBag');
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
+
+    let renderer, scene, camera, modelMesh, nextModelMesh, scanMesh, gridMesh;
+    let garmentImage, modelImage, garmentTextures = [], modelTextures = [], modelMasks = [], cards = [], cardGroups = [];
+    let pos = 0, target = 0, intro = reducedMotion ? 1 : 0;
+    let selectedIndex = -1, selectedColor = 0, selectedSize = 'M';
+    let pointer = { x: 0, y: 0, sx: 0, sy: 0, tx: 0, ty: 0 };
+    let drag = { active: false, moved: false, startX: 0, startY: 0, startPos: 0, lastX: 0, lastTime: 0, velocity: 0, downCard: null };
+    let hoverCard = null, wheelAccum = 0, lastWheelStep = 0, scanState = null;
+    let raycaster = null, ndc = null;
+    let pointerDirty = false, lastHoverAt = 0, cursorMode = '', loopRunning = false;
+    let lastFrame = 0, parallaxX = NaN, parallaxY = NaN, parallaxIntro = -1;
+    let tintCurrent = null, tintTarget = null;
+    const mod = (n, m) => ((n % m) + m) % m;
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+    function loadImage(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.decoding = 'async';
+        img.onload = () => {
+          if (img.decode) img.decode().then(() => resolve(img), () => resolve(img));
+          else resolve(img);
+        };
+        img.onerror = () => reject(new Error('Could not load image: ' + url));
+        img.src = url;
+      });
+    }
+
+    const hexToRgb = hex => {
+      const n = parseInt(hex.slice(1), 16);
+      return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255];
+    };
+
+    function cropCanvas(image, sx, sy, sw, sh, out = 512, readable = false) {
+      const c = document.createElement('canvas'); c.width = out; c.height = out;
+      const ctx = c.getContext('2d', readable ? { willReadFrequently: true } : undefined);
+      ctx.clearRect(0, 0, out, out);
+      ctx.drawImage(image, sx, sy, sw, sh, 0, 0, out, out);
+      return c;
+    }
+
+    function textureFromCanvas(c) {
+      const texture = new THREE.CanvasTexture(c);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      texture.generateMipmaps = true;
+      texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      return texture;
+    }
+
+    // Builds a garment-only mask from the model crop so recolouring never touches skin, hair or trousers.
+    function buildMaskTexture(source, item) {
+      const size = 256;
+      const c = document.createElement('canvas'); c.width = size; c.height = size;
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(source, 0, 0, size, size);
+      const data = ctx.getImageData(0, 0, size, size).data;
+      const total = size * size;
+      const [br, bg, bb] = hexToRgb(item.c[0][1]);
+      const baseL = .299 * br + .587 * bg + .114 * bb;
+      const lMin = Math.max(.3, baseL * .58);
+      const sMax = baseL > .8 ? .16 : .14;
+      const y0 = Math.floor(size * .16), y1 = Math.floor(size * .8);
+      const x0 = Math.floor(size * .03), x1 = Math.floor(size * .97);
+      const cond = new Uint8Array(total);
+
+      for (let y = y0; y < y1; y++) {
+        for (let x = x0; x < x1; x++) {
+          const i = y * size + x, p = i << 2;
+          if (data[p + 3] < 128) continue;
+          const r = data[p] / 255, g = data[p + 1] / 255, b = data[p + 2] / 255;
+          const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+          if (mx > 1e-4 && (mx - mn) / mx < sMax && .299 * r + .587 * g + .114 * b > lMin) cond[i] = 1;
+        }
+      }
+
+      const visited = new Uint8Array(total);
+      const queue = new Int32Array(total);
+      const bestPixels = new Int32Array(total);
+      let bestLen = 0;
+
+      for (let start = 0; start < total; start++) {
+        if (!cond[start] || visited[start]) continue;
+        let head = 0, tail = 0;
+        queue[tail++] = start; visited[start] = 1;
+        while (head < tail) {
+          const i = queue[head++];
+          const y = (i / size) | 0, x = i - y * size;
+          if (x > 0 && cond[i - 1] && !visited[i - 1]) { visited[i - 1] = 1; queue[tail++] = i - 1; }
+          if (x < size - 1 && cond[i + 1] && !visited[i + 1]) { visited[i + 1] = 1; queue[tail++] = i + 1; }
+          if (y > 0 && cond[i - size] && !visited[i - size]) { visited[i - size] = 1; queue[tail++] = i - size; }
+          if (y < size - 1 && cond[i + size] && !visited[i + size]) { visited[i + size] = 1; queue[tail++] = i + size; }
+        }
+        if (tail > bestLen) { bestLen = tail; bestPixels.set(queue.subarray(0, tail)); }
+      }
+
+      const maskCanvas = document.createElement('canvas'); maskCanvas.width = size; maskCanvas.height = size;
+      const maskCtx = maskCanvas.getContext('2d');
+      const img = maskCtx.createImageData(size, size);
+      for (let k = 0; k < bestLen; k++) {
+        const p = bestPixels[k] << 2;
+        img.data[p] = 255; img.data[p + 1] = 255; img.data[p + 2] = 255; img.data[p + 3] = 255;
+      }
+      maskCtx.putImageData(img, 0, 0);
+
+      const texture = new THREE.CanvasTexture(maskCanvas);
+      texture.colorSpace = THREE.NoColorSpace;
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.generateMipmaps = false;
+      return texture;
+    }
+
+    function makeTextTexture(title, price) {
+      const c = document.createElement('canvas'); c.width = 640; c.height = 150;
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0, 0, c.width, c.height);
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,.18)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 1;
+      ctx.fillStyle = '#fff'; ctx.font = '600 34px Inter, Arial, sans-serif';
+      ctx.fillText(title, 8, 45, 620);
+      ctx.font = '700 40px Inter, Arial, sans-serif';
+      ctx.fillText('$' + price, 8, 112, 620);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter;
+      return t;
+    }
+
+    function roundedShape(w, h, r) {
+      const x = -w / 2, y = -h / 2;
+      const s = new THREE.Shape();
+      s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r);
+      s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
+      s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+      return s;
+    }
+
+    function makeSheenTexture() {
+      const c = document.createElement('canvas'); c.width = 256; c.height = 8;
+      const ctx = c.getContext('2d');
+      const g = ctx.createLinearGradient(0, 0, 256, 0);
+      g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.42, 'rgba(255,255,255,0)');
+      g.addColorStop(.5, 'rgba(255,255,255,.8)'); g.addColorStop(.58, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 8);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+    }
+
+    function makeScanTexture() {
+      const c = document.createElement('canvas'); c.width = 256; c.height = 8;
+      const ctx = c.getContext('2d'); const g = ctx.createLinearGradient(0, 0, 256, 0);
+      g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.18, '#fff'); g.addColorStop(.82, '#fff'); g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 8);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+    }
+
+    function makeGridTexture() {
+      const c = document.createElement('canvas'); c.width = 8; c.height = 64;
+      const ctx = c.getContext('2d'); ctx.fillStyle = 'rgba(255,255,255,0)'; ctx.fillRect(0,0,8,64);
+      ctx.fillStyle = 'rgba(255,255,255,.38)'; ctx.fillRect(0, 0, 8, 1); ctx.fillRect(0, 8, 8, 1);
+      const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 18); return t;
+    }
+
+    const maxPixelRatio = () => Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 1.75);
+
+    function initRenderer() {
+      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'high-performance' });
+      renderer.setPixelRatio(maxPixelRatio());
+      renderer.setSize(window.innerWidth, window.innerHeight, false);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, .1, 100);
+      camera.position.set(0, 0, 16);
+      scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+      const key = new THREE.DirectionalLight(0xffffff, 1.4); key.position.set(-4, 8, 10); scene.add(key);
+      raycaster = new THREE.Raycaster();
+      ndc = new THREE.Vector2();
+      if (finePointer) document.documentElement.classList.add('has-custom-cursor');
+    }
+
+    function makeModelMaterial(index, reveal) {
+      const uniforms = {
+        uMask: { value: modelMasks[index] },
+        uTint: { value: new THREE.Color(ITEMS[index].c[0][1]) },
+        uReveal: { value: 0 }
+      };
+      const material = new THREE.MeshBasicMaterial({
+        map: modelTextures[index], transparent: true, depthWrite: false,
+        side: THREE.DoubleSide, opacity: reveal ? 1 : 0
+      });
+      material.userData.uniforms = uniforms;
+      material.customProgramCacheKey = () => reveal ? 'model-tint-reveal' : 'model-tint';
+      material.onBeforeCompile = shader => {
+        shader.uniforms.uMask = uniforms.uMask;
+        shader.uniforms.uTint = uniforms.uTint;
+        const extraUniforms = reveal
+          ? '\nuniform sampler2D uMask;\nuniform vec3 uTint;\nuniform float uReveal;'
+          : '\nuniform sampler2D uMask;\nuniform vec3 uTint;';
+        if (reveal) shader.uniforms.uReveal = uniforms.uReveal;
+        shader.fragmentShader = shader.fragmentShader
+          .replace('#include <common>', '#include <common>' + extraUniforms)
+          .replace('#include <map_fragment>', `#include <map_fragment>
+            float garmentMask = texture2D(uMask, vMapUv).r;
+            float garmentLuma = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+            vec3 garmentTint = uTint * (0.55 + 0.7 * garmentLuma);
+            diffuseColor.rgb = mix(diffuseColor.rgb, garmentTint, garmentMask);`);
+        if (reveal) {
+          shader.fragmentShader = shader.fragmentShader.replace('void main() {', 'void main() {\n  if (vMapUv.y < (1.0 - uReveal)) discard;');
+        }
+      };
+      return material;
+    }
+
+    function setModelTexture(mesh, index) {
+      mesh.material.map = modelTextures[index];
+      mesh.material.userData.uniforms.uMask.value = modelMasks[index];
+    }
+
+    function buildModel() {
+      const modelH = 1;
+      const geometry = new THREE.PlaneGeometry(524 / 1360 * modelH, modelH);
+      modelMesh = new THREE.Mesh(geometry, makeModelMaterial(0, false));
+      modelMesh.position.z = .5; modelMesh.visible = true; scene.add(modelMesh);
+
+      nextModelMesh = new THREE.Mesh(geometry.clone(), makeModelMaterial(0, true));
+      nextModelMesh.position.z = .55; nextModelMesh.visible = false; scene.add(nextModelMesh);
+
+      const gridMat = new THREE.ShaderMaterial({
+        uniforms: { uGrid: { value: makeGridTexture() }, uReveal: { value: 0 }, uOpacity: { value: .38 } },
+        vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+        fragmentShader: `uniform sampler2D uGrid; uniform float uReveal; uniform float uOpacity; varying vec2 vUv; void main(){ if(vUv.y < (1.0-uReveal)) discard; vec4 c=texture2D(uGrid,vUv); gl_FragColor=vec4(c.rgb,c.a*uOpacity); }`,
+        transparent: true, depthWrite: false, side: THREE.DoubleSide
+      });
+      gridMesh = new THREE.Mesh(geometry.clone(), gridMat); gridMesh.position.z = .58; gridMesh.visible = false; scene.add(gridMesh);
+
+      const scanMat = new THREE.MeshBasicMaterial({ map: makeScanTexture(), transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
+      scanMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, .025), scanMat); scanMesh.position.z = .62; scanMesh.visible = false; scene.add(scanMesh);
+      resizeModel();
+    }
+
+    function makeCard(item, index, labelTex, sheenTex) {
+      const group = new THREE.Group();
+      const bgGeo = new THREE.ShapeGeometry(roundedShape(1, 1.42, .075), 8);
+      const bgMat = new THREE.MeshPhysicalMaterial({ color: 0xe9e4dc, roughness: .24, metalness: .08, transparent: true, opacity: .66, side: THREE.DoubleSide, depthWrite: false });
+      const bg = new THREE.Mesh(bgGeo, bgMat); bg.position.z = 0; group.add(bg);
+
+      const garmentMat = new THREE.MeshBasicMaterial({ map: garmentTextures[index % 5], transparent: true, depthWrite: false, side: THREE.DoubleSide });
+      const garment = new THREE.Mesh(new THREE.PlaneGeometry(.78, .92), garmentMat); garment.position.set(0, .17, .018); group.add(garment);
+
+      const labelMat = new THREE.MeshBasicMaterial({ map: labelTex, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+      const label = new THREE.Mesh(new THREE.PlaneGeometry(.86, .20), labelMat); label.position.set(0, -.52, .024); group.add(label);
+
+      const sheenMat = new THREE.MeshBasicMaterial({ map: sheenTex, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
+      const sheen = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), sheenMat); sheen.position.set(-.8, 0, .035); sheen.raycast = () => {}; group.add(sheen);
+      const card = { group, bg, garment, label, sheen, index, itemIndex: index % 5, u: 0, opacity: 1, sheenStart: 0, sheenDone: true };
+      group.userData.card = card;
+      scene.add(group); return card;
+    }
+
+    function buildCards() {
+      const labelTextures = ITEMS.map(item => makeTextTexture(item.n, item.p));
+      const sheenTexture = makeSheenTexture();
+      for (let i = 0; i < 10; i++) cards.push(makeCard(ITEMS[i % 5], i, labelTextures[i % 5], sheenTexture));
+      cardGroups = cards.map(card => card.group);
+    }
+
+    function resizeModel() {
+      if (!modelMesh || !camera) return;
+      const viewHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+      const modelPx = Math.min(window.innerHeight * (mobile ? .62 : .78), window.innerWidth * (mobile ? 1.28 : .62));
+      const worldPerPx = viewHeight / window.innerHeight;
+      const h = modelPx * worldPerPx;
+      const w = h * (524 / 1360);
+      const bottom = -viewHeight / 2;
+      const y = bottom + h / 2 + (mobile ? -.04 : 0);
+      [modelMesh, nextModelMesh, gridMesh].forEach(mesh => {
+        if (!mesh) return;
+        mesh.scale.set(h, h, 1);
+        mesh.position.y = y;
+      });
+      if (scanMesh) {
+        scanMesh.scale.set(w * 1.28, 1, 1);
+        scanMesh.userData.modelTop = y + h / 2;
+        scanMesh.userData.modelHeight = h;
+      }
+    }
+
+    function xAt(a, vw = window.innerWidth) {
+      const xs = mobile ? [0,.36,.5,.56,.6,.62] : [0,.215,.345,.432,.49,.52];
+      const i = Math.min(4, Math.floor(a)); const f = clamp(a - i, 0, 1);
+      return (xs[i] + (xs[i + 1] - xs[i]) * f) * vw;
+    }
+
+    function updateCards(t) {
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const viewHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+      const worldPerPx = viewHeight / vh;
+      const sx = pointer.sx, sy = pointer.sy;
+      const introEase = 1 - Math.pow(1 - intro, 3);
+      const bobAmp = reducedMotion ? 0 : viewHeight * .006;
+      const cardW = Math.min(vw * (mobile ? .30 : .148), vh * (mobile ? .20 : .33)) * worldPerPx;
+      const rotY = THREE.MathUtils.degToRad(sx * 10);
+      const rotX = THREE.MathUtils.degToRad(-sy * 6);
+      const now = performance.now();
+
+      for (const card of cards) {
+        const u = mod(card.index - pos + 5, 10) - 5;
+        const a = Math.abs(u); const sg = u < 0 ? -1 : 1;
+        card.u = u;
+        let s, z, opacity, ry;
+        if (a < 1) {
+          s = .55 + .45 * a; z = -260 * (1 - a) * worldPerPx; opacity = a; ry = -sg * 16 * a;
+        } else {
+          s = 1 / (1 + .3 * Math.pow(a - 1, 1.15));
+          z = -110 * (a - 1) * worldPerPx;
+          ry = -sg * (16 + 9 * Math.min(2, a - 1));
+          opacity = a > 3.4 ? 1 - (a - 3.4) / .8 : 1;
+        }
+        const bob = bobAmp ? Math.sin(t * 1.1 + card.index * 1.7) * bobAmp * Math.min(1, a) : 0;
+        const y = bob - (1 - s) * viewHeight * .04;
+        const x = sg * xAt(a, vw) * worldPerPx * introEase;
+        card.group.position.set(x, y - .1, z - .15);
+        card.group.rotation.y = rotY + THREE.MathUtils.degToRad(ry);
+        card.group.rotation.x = rotX;
+        const scale = s * (.6 + .4 * introEase);
+        card.group.scale.set(cardW * scale, cardW * scale, 1);
+        const alpha = clamp(opacity, 0, 1) * introEase;
+        card.bg.material.opacity = .66 * alpha;
+        card.garment.material.opacity = alpha;
+        card.label.material.opacity = alpha;
+        card.group.visible = opacity > .01 && introEase > .005;
+        card.group.renderOrder = a < 1 ? 1 : Math.round(100 - 10 * a);
+        // Subtle distance softening is handled by scale/alpha; preserve crisp product imagery.
+        if (card.sheenStart && !card.sheenDone) {
+          const p = clamp((now - card.sheenStart) / 1000, 0, 1);
+          card.sheen.position.x = -1.1 + p * 2.2;
+          card.sheen.material.opacity = Math.sin(p * Math.PI) * .8;
+          if (p >= 1) { card.sheenDone = true; card.sheen.material.opacity = 0; }
+        }
+      }
+    }
+
+    function updateParallax(dt) {
+      if (reducedMotion) return;
+      const ease = 1 - Math.exp(-dt * 3.7);
+      pointer.sx += (pointer.tx - pointer.sx) * ease;
+      pointer.sy += (pointer.ty - pointer.sy) * ease;
+      if (Math.abs(pointer.tx - pointer.sx) < .0006) pointer.sx = pointer.tx;
+      if (Math.abs(pointer.ty - pointer.sy) < .0006) pointer.sy = pointer.ty;
+      if (pointer.sx === parallaxX && pointer.sy === parallaxY && intro === parallaxIntro) return;
+      parallaxX = pointer.sx; parallaxY = pointer.sy; parallaxIntro = intro;
+      roomEl.style.transform = `translate3d(${-pointer.sx * 22}px,${-pointer.sy * 14}px,0) scale(${1.08 - .03 * intro})`;
+      ghostEl.style.transform = `translate(calc(-50% - ${pointer.sx * 40}px),${-pointer.sy * 16}px)`;
+      if (intro < 1) {
+        const ie = 1 - Math.pow(1 - intro, 3);
+        ghostLetters.forEach((letter, i) => { letter.style.transform = `translateY(${(1 - ie) * (60 + 30 * i)}px)`; });
+      }
+    }
+
+    function setCursorMode(mode) {
+      if (mode === cursorMode) return;
+      cursorMode = mode;
+      cursorEl.classList.toggle('try', mode === 'try');
+      cursorEl.classList.toggle('drag', mode === 'drag');
+      cursorEl.classList.toggle('btn', mode === 'btn');
+    }
+
+    function updateCursor() {
+      if (!finePointer) return;
+      cursorEl.style.transform = `translate3d(${pointer.x - 29}px,${pointer.y - 29}px,0) scale(${drag.active ? 1.05 : 1})`;
+    }
+
+    function setSelected(index, animate = true) {
+      const itemIndex = mod(index, 5);
+      if (selectedIndex === itemIndex && animate) return;
+      selectedIndex = itemIndex; selectedColor = 0;
+      const item = ITEMS[itemIndex];
+      setTint(item.c[0][1]);
+      if (animate && !reducedMotion) {
+        nameWindow.classList.remove('roll'); priceWindow.classList.remove('roll');
+        void nameWindow.offsetWidth;
+        nameWindow.classList.add('roll'); priceWindow.classList.add('roll');
+        setTimeout(() => { nameWindow.classList.remove('roll'); priceWindow.classList.remove('roll'); }, 650);
+      }
+      buyNameEl.textContent = item.n;
+      buyPriceEl.textContent = '$' + item.p;
+      thumbEl.style.backgroundImage = `url("${ASSETS.garments}")`;
+      thumbEl.style.backgroundPosition = `${item.g[0]}% ${item.g[1]}%`;
+      sizeButtons.forEach(btn => {
+        const active = btn.dataset.size === selectedSize;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-pressed', String(active));
+      });
+      renderColors(item);
+    }
+
+    function setTint(hex) {
+      if (tintTarget) tintTarget.set(hex);
+    }
+
+    function renderColors(item) {
+      colorsEl.replaceChildren();
+      item.c.forEach(([name, color], i) => {
+        const active = i === selectedColor;
+        const dot = document.createElement('button');
+        dot.className = 'color-dot' + (active ? ' active' : '');
+        dot.style.background = color;
+        dot.dataset.index = i;
+        dot.setAttribute('aria-label', name);
+        dot.setAttribute('aria-pressed', String(active));
+        dot.title = name;
+        colorsEl.appendChild(dot);
+      });
+      colorLabel.textContent = 'Color · ' + item.c[selectedColor][0];
+    }
+
+    colorsEl.addEventListener('click', e => {
+      const dot = e.target.closest('.color-dot');
+      if (!dot || selectedIndex < 0) return;
+      const index = Number(dot.dataset.index);
+      if (index === selectedColor) return;
+      selectedColor = index;
+      [...colorsEl.children].forEach((el, i) => {
+        const active = i === index;
+        el.classList.toggle('active', active);
+        el.setAttribute('aria-pressed', String(active));
+      });
+      colorLabel.textContent = 'Color · ' + ITEMS[selectedIndex].c[index][0];
+      setTint(ITEMS[selectedIndex].c[index][1]);
+    });
+
+    function startTryOn(index) {
+      const itemIndex = mod(index, 5);
+      setSelected(itemIndex, true);
+      if (reducedMotion) {
+        setModelTexture(modelMesh, itemIndex);
+        modelMesh.material.opacity = 1;
+        nextModelMesh.visible = false; gridMesh.visible = false; scanMesh.visible = false;
+        return;
+      }
+      if (scanState) scanState = null;
+      setModelTexture(nextModelMesh, itemIndex);
+      nextModelMesh.material.userData.uniforms.uReveal.value = 0;
+      nextModelMesh.visible = true;
+      gridMesh.material.uniforms.uReveal.value = 0; gridMesh.visible = true;
+      scanMesh.visible = true; scanMesh.material.opacity = 0;
+      scanState = { start: performance.now(), duration: 950, itemIndex };
+    }
+
+    function updateScan(now) {
+      if (!scanState) return;
+      const p = clamp((now - scanState.start) / scanState.duration, 0, 1);
+      // cubic-bezier(.65,0,.35,1) approximation
+      const eased = p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+      nextModelMesh.material.userData.uniforms.uReveal.value = eased;
+      gridMesh.material.uniforms.uReveal.value = eased;
+      const top = scanMesh.userData.modelTop;
+      const h = scanMesh.userData.modelHeight;
+      scanMesh.position.y = top - eased * h;
+      const fade = p < .08 ? p / .08 : p > .92 ? (1 - p) / .08 : 1;
+      scanMesh.material.opacity = clamp(fade, 0, 1);
+      if (p >= 1) {
+        setModelTexture(modelMesh, scanState.itemIndex);
+        modelMesh.material.opacity = 1;
+        nextModelMesh.visible = false; gridMesh.visible = false; scanMesh.visible = false;
+        scanState = null;
+      }
+    }
+
+    function maybeSettle() {
+      if (drag.active || Math.abs(target - pos) >= .02) return;
+      const itemIndex = mod(Math.round(target), 5);
+      if (itemIndex !== selectedIndex) startTryOn(itemIndex);
+    }
+
+    function getCardAtPointer(clientX, clientY) {
+      if (!raycaster || !camera) return null;
+      ndc.x = (clientX / window.innerWidth) * 2 - 1;
+      ndc.y = -(clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(ndc, camera);
+      const hits = raycaster.intersectObjects(cardGroups, true);
+      for (const hit of hits) {
+        let obj = hit.object;
+        while (obj && !obj.userData.card) obj = obj.parent;
+        if (obj && obj.visible) return obj.userData.card;
+      }
+      return null;
+    }
+
+    function step(delta) { target += delta; }
+
+    function onPointerMove(e) {
+      pointer.x = e.clientX; pointer.y = e.clientY;
+      pointer.tx = clamp((e.clientX / window.innerWidth - .5) * 2, -.5, .5);
+      pointer.ty = clamp((e.clientY / window.innerHeight - .5) * 2, -.5, .5);
+      if (drag.active) {
+        const dx = e.clientX - drag.startX;
+        if (Math.abs(dx) > 6 || Math.abs(e.clientY - drag.startY) > 6) drag.moved = true;
+        const now = performance.now(); const dt = Math.max(1, now - drag.lastTime);
+        drag.velocity = (e.clientX - drag.lastX) / dt;
+        drag.lastX = e.clientX; drag.lastTime = now;
+        if (drag.moved) {
+          const stepPx = xAt(1) || window.innerWidth * .215;
+          pos = drag.startPos - dx / stepPx;
+        }
+        setCursorMode('drag');
+      } else {
+        const overButton = e.target.closest && e.target.closest('button');
+        const overPanel = e.target.closest && e.target.closest('.buy, .tabs, .rail');
+        if (overButton) { hoverCard = null; setCursorMode('btn'); }
+        else if (overPanel) { hoverCard = null; setCursorMode(''); }
+        else pointerDirty = true;
+      }
+      updateCursor();
+    }
+
+    function onPointerDown(e) {
+      if (e.target.closest && e.target.closest('button')) return;
+      drag.active = true; drag.moved = false; drag.startX = e.clientX; drag.startY = e.clientY;
+      drag.startPos = pos; drag.lastX = e.clientX; drag.lastTime = performance.now(); drag.velocity = 0;
+      drag.downCard = getCardAtPointer(e.clientX, e.clientY);
+      canvas.setPointerCapture?.(e.pointerId); setCursorMode('drag');
+    }
+
+    function onPointerUp() {
+      if (!drag.active) return;
+      if (!drag.moved && drag.downCard) {
+        target = Math.round(pos + drag.downCard.u);
+      } else if (drag.moved) {
+        const stepPx = xAt(1) || window.innerWidth * .215;
+        const flick = drag.velocity * Math.min(1, Math.abs(drag.velocity) / .9);
+        target = Math.round(pos - flick * 3.2);
+      }
+      drag.active = false; drag.downCard = null;
+      if (!hoverCard) setCursorMode('drag');
+    }
+
+    function onWheel(e) {
+      e.preventDefault();
+      wheelAccum += Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      const now = performance.now();
+      if (Math.abs(wheelAccum) > 60 && now - lastWheelStep > 260) {
+        step(wheelAccum > 0 ? 1 : -1); wheelAccum = 0; lastWheelStep = now;
+      }
+    }
+
+    function updateTint(dt) {
+      if (!tintCurrent || !modelMesh) return;
+      tintCurrent.lerp(tintTarget, 1 - Math.exp(-dt * 12));
+      modelMesh.material.userData.uniforms.uTint.value.copy(tintCurrent);
+      if (nextModelMesh.visible) nextModelMesh.material.userData.uniforms.uTint.value.copy(tintCurrent);
+    }
+
+    function updateHover() {
+      const card = getCardAtPointer(pointer.x, pointer.y);
+      if (card === hoverCard) return;
+      hoverCard = card;
+      if (card) { card.sheenStart = performance.now(); card.sheenDone = false; setCursorMode('try'); }
+      else setCursorMode('drag');
+    }
+
+    function animate(now = performance.now()) {
+      const dt = Math.min(.1, (now - lastFrame) / 1000 || .016); lastFrame = now;
+      const t = now / 1000;
+      if (!drag.active) {
+        if (reducedMotion) pos = target;
+        else pos += (target - pos) * (1 - Math.exp(-dt * 7));
+      }
+      if (reducedMotion) intro = 1; else intro = Math.min(1, intro + dt * .72);
+      if (pointerDirty && !drag.active && now - lastHoverAt > 66) {
+        lastHoverAt = now; pointerDirty = false;
+        updateHover();
+      }
+      updateCards(t); updateParallax(dt); updateScan(now); updateTint(dt); maybeSettle();
+      renderer.render(scene, camera);
+    }
+
+    function startLoop() {
+      if (loopRunning || !renderer) return;
+      loopRunning = true;
+      lastFrame = performance.now();
+      renderer.setAnimationLoop(animate);
+    }
+
+    function stopLoop() {
+      if (!loopRunning) return;
+      loopRunning = false;
+      renderer.setAnimationLoop(null);
+    }
+
+    async function init() {
+      const [three, gImg, mImg] = await Promise.all([
+        import(THREE_URL),
+        loadImage(ASSETS.garments),
+        loadImage(ASSETS.model)
+      ]);
+      THREE = three;
+      garmentImage = gImg; modelImage = mImg;
+      tintCurrent = new THREE.Color(ITEMS[0].c[0][1]);
+      tintTarget = tintCurrent.clone();
+      initRenderer();
+
+      const garmentScale = garmentImage.width / 2048;
+      const cropW = Math.round(640 * garmentScale);
+      const modelScale = modelImage.width / 2688;
+      const modelW = Math.round(524 * modelScale);
+      const modelH = Math.round(1360 * modelScale);
+
+      ITEMS.forEach(item => {
+        const sx = (garmentImage.width - cropW) * item.g[0] / 100;
+        const sy = (garmentImage.height - cropW) * item.g[1] / 100;
+        garmentTextures.push(textureFromCanvas(cropCanvas(garmentImage, sx, sy, cropW, cropW)));
+        const mx = (modelImage.width - modelW) * item.m / 100;
+        const modelCanvas = cropCanvas(modelImage, mx, modelImage.height - modelH, modelW, modelH, 512, true);
+        modelTextures.push(textureFromCanvas(modelCanvas));
+        modelMasks.push(buildMaskTexture(modelCanvas, item));
+      });
+      garmentImage = modelImage = null;
+
+      if (document.fonts && document.fonts.load) {
+        await Promise.race([
+          Promise.all([
+            document.fonts.load('600 34px Inter'),
+            document.fonts.load('700 40px Inter')
+          ]).catch(() => {}),
+          new Promise(resolve => setTimeout(resolve, 1200))
+        ]);
+      }
+
+      buildModel(); buildCards();
+      [nextModelMesh, gridMesh, scanMesh].forEach(mesh => { mesh.visible = true; });
+      renderer.compile(scene, camera);
+      [nextModelMesh, gridMesh, scanMesh].forEach(mesh => { mesh.visible = false; });
+      if (reducedMotion) {
+        modelMesh.material.opacity = 1;
+        selectedIndex = 0;
+        setSelected(0, false);
+      } else startTryOn(0);
+      moveIndicator(tabButtons.find(tab => tab.classList.contains('active')) || tabButtons[0]);
+      loading.classList.add('hidden');
+      setTimeout(() => loading.remove(), 600);
+      startLoop();
+    }
+
+    // Category pill motion follows the selected tab; the product arc loops a full lap as in the reference.
+    function moveIndicator(tab) {
+      if (!tab) return;
+      const navRect = tabsNav.getBoundingClientRect();
+      const rect = tab.getBoundingClientRect();
+      indicator.style.width = rect.width + 'px';
+      indicator.style.transform = `translateX(${rect.left - navRect.left - 5}px)`;
+    }
+
+    tabButtons.forEach(tab => tab.addEventListener('click', () => {
+      tabButtons.forEach(t => {
+        const active = t === tab;
+        t.classList.toggle('active', active);
+        t.setAttribute('aria-pressed', String(active));
+      });
+      moveIndicator(tab);
+      target += 5;
+    }));
+
+    prevBtn.addEventListener('click', () => step(-1));
+    nextBtn.addEventListener('click', () => step(1));
+    sizeButtons.forEach(btn => btn.addEventListener('click', () => {
+      selectedSize = btn.dataset.size;
+      sizeButtons.forEach(b => {
+        const active = b === btn;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-pressed', String(active));
+      });
+    }));
+
+    const addToBagLabel = addToBagBtn.textContent;
+    let addToBagTimer = 0;
+    addToBagBtn.addEventListener('click', () => {
+      addToBagBtn.textContent = 'Added ✓';
+      addToBagBtn.style.background = '#e9f2e8';
+      clearTimeout(addToBagTimer);
+      addToBagTimer = setTimeout(() => {
+        addToBagBtn.textContent = addToBagLabel;
+        addToBagBtn.style.background = '';
+      }, 1200);
+    });
+
+    railButtons.forEach((btn, i) => btn.addEventListener('click', () => {
+      railButtons.forEach(b => {
+        const active = b === btn;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-pressed', String(active));
+      });
+      if (i === 1) addToBagBtn.click();
+    }));
+
+    canvas.addEventListener('pointerdown', onPointerDown);
+    canvas.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+    });
+
+    let resizeFrame = 0;
+    window.addEventListener('resize', () => {
+      if (resizeFrame) return;
+      resizeFrame = requestAnimationFrame(() => {
+        resizeFrame = 0;
+        mobile = isMobile();
+        if (!renderer || !camera) return;
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight, false);
+        renderer.setPixelRatio(maxPixelRatio());
+        resizeModel();
+        moveIndicator(tabButtons.find(tab => tab.classList.contains('active')));
+      });
+    }, { passive: true });
+
+    canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); stopLoop(); });
+    canvas.addEventListener('webglcontextrestored', () => startLoop());
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stopLoop();
+      else startLoop();
+    });
+
+    init().catch(err => {
+      console.error(err);
+      loading.classList.remove('hidden');
+      loading.textContent = 'Unable to load fitting room assets';
+      loading.title = 'Check your internet connection and that the image host permits cross-origin loading.';
+    });
+  </script>
+</body>
+</html>
