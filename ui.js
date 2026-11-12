@@ -310,11 +310,11 @@
     rail.addEventListener(
       'wheel',
       (event) => {
-        if (modelMode || state.panel || event.ctrlKey || Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
+        if (modelMode || state.panel || event.ctrlKey) return;
         event.preventDefault();
         const now = performance.now();
         if (now - lastStepAt < 1450) return;
-        wheelTotal += event.deltaY;
+        wheelTotal += Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
         if (Math.abs(wheelTotal) < 28) return;
         step(wheelTotal > 0 ? 1 : -1);
         wheelTotal = 0;
@@ -343,6 +343,33 @@
       isRailHovered = false;
       restartRotation();
     });
+    let mouseStart = null;
+    rail.addEventListener('pointerdown', (event) => {
+      if (event.pointerType !== 'mouse' || event.button !== 0) return;
+      mouseStart = { x: event.clientX, y: event.clientY };
+      rail.dataset.swiped = 'false';
+    });
+    rail.addEventListener('pointermove', (event) => {
+      if (!mouseStart || Math.abs(event.clientX - mouseStart.x) < 10) return;
+      rail.setPointerCapture(event.pointerId);
+      rail.classList.add('is-dragging');
+    });
+    const endDrag = (event) => {
+      if (!mouseStart) return;
+      const dx = event.clientX - mouseStart.x;
+      const dy = event.clientY - mouseStart.y;
+      mouseStart = null;
+      rail.classList.remove('is-dragging');
+      if (rail.hasPointerCapture(event.pointerId)) rail.releasePointerCapture(event.pointerId);
+      if (event.type === 'pointercancel' || Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy)) return;
+      rail.dataset.swiped = 'true';
+      step(dx < 0 ? 1 : -1);
+      setTimeout(() => {
+        rail.dataset.swiped = 'false';
+      }, 350);
+    };
+    rail.addEventListener('pointerup', endDrag);
+    rail.addEventListener('pointercancel', endDrag);
     let startX = 0,
       startY = 0;
     rail.addEventListener(

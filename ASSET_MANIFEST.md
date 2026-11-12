@@ -1,25 +1,13 @@
-# Asset manifest / provenance
+# Active asset provenance
 
-| Asset group | Count | Status | Provenance | Fidelity |
-|---|---:|---|---|---|
-| Garment GLB models | 10 | Bundled, validated | Original procedural geometry generated with `scripts/build_garments.py` | Genuine mesh; approximate garment silhouettes |
-| Garment textile textures | 10 | Bundled | Original procedural drawings/noise/textures | Approximate patterns |
-| Product catalog previews | 10 | Bundled | Original procedural image generation | Stylized garment renders |
-| Chrome clothing rack | 1 | Constructed in Three.js | Original generated primitives | Matches visual composition, not exact original mesh |
-| Hangers | 10 | Constructed in Three.js | Original tube geometry | Original, approximate |
-| Studio scene | 1 | Constructed in Three.js/CSS | Original background, lights, fog, floor | Inspired by user reference |
-| Static preview intro | 1 | Bundled | Original generated fallback illustration | Reference-inspired |
-| Static showroom/acid previews | 2 | Bundled | Edited frames from the user-supplied MP4 | Visually close, **not WebGL renders** |
-| Three.js library | 1 CDN module + addon | Runtime dependency | jsDelivr, Three.js under MIT license | Exact known version 0.187.0 |
-| Font | External with local fallback | Optional | Google Fonts Inter / system fallback | Close approximation |
-| Premium reference garment assets | 0 | Not bundled | Third-party marketplace listings are only leads | Not available for verified redistribution |
+The active collection consists of 10 Offcut pieces from the user-supplied `offcut-clothing-rail/index.html` reference.
 
-## Model specification
+- `assets/product-art/offcut-*.webp`: garment cutouts extracted from the reference's shared sprite using its original outlines and alpha transparency. The photographs include their original wooden hangers. Names and euro prices follow the reference.
+- `assets/garments/offcut-*.glb`: image-derived cloth meshes built with `scripts/build_offcut_models.py`. They have textured fronts, approximate plain backs, closed edges, and smooth vertex normals. These are approximate display models, not scans or clothing simulation assets.
+- `assets/vendor/model-viewer.min.js`: Google model-viewer 4.1.0, obtained from jsDelivr's official npm package. Its Apache 2.0 license is included beside the module. The module loads only after switching to 3D view.
+- Fonts: Inter and Instrument Serif, loaded through Google Fonts with local fallback families.
+- UI icons: simple inline SVG geometry.
 
-Generated GLB assets use a consistent forward orientation (+Z), a neck reference close to `y=0`, width around 1.8–2.2 world units including sleeves, depth around 0.3 world units, and fabric bottom near `y=-1.6…-1.85`.
+Earlier archive artwork, procedural GLBs, and fallback screenshots are retained as repository history/reference assets. They are not part of the active product data or the initial showroom download.
 
-Geometry has a front and back cloth surface and sleeve panels with a textured physical/PBR material. It is not cloth simulation or rigged fabric. There are approximately 5,872 triangles per GLB, excluding dynamically constructed details.
-
-## Reference licensing
-
-The supplied video is used solely as a user-provided artistic reference and as the source of two explicitly labeled **static fallback screenshots**. The package should not be represented as the official LOOPS website. Permission from the relevant rights holder may be needed before public/commercial distribution of branding or user-supplied reference frames.
+The experimental additional 10 archive cutouts were removed from the active collection and working tree after the user clarified that only the original 10 garments should remain.

@@ -914,3 +914,12 @@ h1 span {
     transition-duration: 0.01ms !important;
   }
 }
+
+.clothing-rail,
+.rail-piece {
+  cursor: grab;
+}
+.clothing-rail.is-dragging,
+.clothing-rail.is-dragging .rail-piece {
+  cursor: grabbing;
+}

@@ -1,40 +1,37 @@
-# QA report — 2026-11-07
+# Current QA — Offcut rail
 
-## Passed
+The final active collection contains only the 10 original Offcut garments, with their original visible hangers. Additional archive pieces are excluded.
 
-- [x] `ui.js` passes `node --check` syntax validation.
-- [x] `scene.js` passes `node --check` syntax validation.
-- [x] All **10 GLB files** load into `trimesh` as valid scenes with finite geometry bounds and a mesh.
-- [x] 10 texture files + 10 product-art files are present.
-- [x] Intro UI mounts in headless Chromium via injected CSS/JavaScript and local data assets.
-- [x] Scroll state displays the showroom UI.
-- [x] Arrow button selection changes the correct product name.
-- [x] Details drawer opens.
-- [x] Add-to-cart opens the cart drawer and increases count.
-- [x] All 10 catalog products render; sample screenshots made.
-- [x] No uncaught UI JavaScript errors in the injected tests.
-- [x] Local HTTP server serves the site assets (`200 OK`).
-- [x] Reduced-motion CSS rules present.
+## Browser verification
 
-## Not verified
+Verified with isolated headless Chrome against the local static site at desktop 1440 × 1000 and mobile 390 × 844.
 
-- [ ] The live, CDN-loaded Three.js scene was **not** visually verified due to restricted internet/browser routing in this test environment.
-- [ ] WebGL 3D raycaster, lighting and live garment texture appearance need a normal online browser QA pass.
-- [ ] Mobile GPU performance has not been measured on physical devices.
-- [ ] Payment checkout intentionally not implemented.
-- [ ] Third-party premium garments have not been bundled or redistributed.
+- All 10 products render and settle at the horizontal centre of the rail.
+- Previous/next navigation wraps correctly through the collection.
+- Vertical mouse-wheel scrolling moves one garment at a time and respects the 1.45-second cooldown.
+- Horizontal trackpad scrolling works in both directions.
+- Mouse dragging works in both directions without opening details after a drag.
+- Automatic browsing advances exactly one garment after 8.5 seconds; the pause control stops it.
+- Reduced-motion preferences disable autoplay and transitions by default.
+- Size selection, adding to the bag, product images, euro subtotal, and panel closing work.
+- The optional 3D viewer loads the selected GLB, and its download link matches the selection.
+- Filtering returns 5 T-shirts and 10 total pieces.
+- Mobile selected garment remains centred, with no horizontal page overflow.
+- No JavaScript page errors or missing asset responses were recorded in the final browser checks.
 
-## Browser verification checklist for deployment
+## Source checks
 
-1. Open `http://localhost:8080/` with network access. Confirm preloader disappears and the full 3D clothes rail appears.
-2. Scroll until selected Harness Tee turns to face the camera.
-3. Drag horizontally; confirm another garment rotates forward and the label changes.
-4. Click a garment/hanger, switch categories, inspect details, change size/color, and add items to the cart.
-5. Visit `/?demo=1` and check the intro/approach/Harness/Acid timing.
-6. Test 1440×960, 1280×800, 768×1024 and 390×844 and check browser console.
+JavaScript syntax checks, Prettier formatting checks, and `git diff --check` pass.
 
-## Additional mobile checks
+The Impeccable detector reported stylistic font warnings for the retained Inter / Instrument Serif pairing. This pairing follows the existing project and supplied Offcut reference; the warnings were reviewed and retained intentionally.
 
-- [x] 390 × 844 UI layout rendered in an injected headless Chromium test.
-- [x] Touch-size navigation targets, product details and demo cart controls responded to simulated clicks.
-- [x] Fixed a static-fallback warning layer that initially intercepted the garment navigation button on mobile (`pointer-events: none`).
+## Material limitations
+
+The downloadable GLBs approximate clothing shape from the supplied images. They are not scanned, rigged, or simulation-ready garments. The photographic rail is the primary presentation.
+
+Checkout is disabled. The bag is a local demonstration.
+
+## Visual evidence
+
+- `preview-rail-desktop.png`
+- `preview-rail-mobile.png`
