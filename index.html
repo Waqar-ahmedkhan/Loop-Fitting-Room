@@ -1,89 +1,148 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#171a1b">
-  <meta name="description" content="Explore the Offcut collection at LOOPS. An interactive rail of graphic tees and everyday layers.">
-  <title>LOOPS® — The Offcut Collection</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=offcut-3">
-  <link rel="preload" as="image" href="./assets/product-art/offcut-winged-skull.webp">
-</head>
-<body>
-  <main>
-    <section class="experience" id="experience" aria-label="Offcut clothing showroom">
-      <header class="topbar">
-        <button class="wordmark" id="goTop" aria-label="LOOPS, return to showroom">loops<sup>®</sup></button>
-        <nav class="header-right" aria-label="Main navigation">
-          <button id="browseBtn">Collection <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></button>
-          <button id="cartBtn" aria-controls="cartPanel" aria-expanded="false">Bag <span id="cartCount">0</span></button>
-        </nav>
-      </header>
-      <h1>The collection<span>.</span></h1>
-      <div class="view-controls" role="group" aria-label="Showroom view">
-        <button id="railViewBtn" class="active" aria-pressed="true">Carousel</button>
-        <button id="modelViewBtn" aria-pressed="false">3D view</button>
-      </div>
-      <div class="model-stage" id="modelStage" hidden>
-        <model-viewer id="garmentModel" alt="Approximate 3D garment model" camera-controls touch-action="pan-y"
-          shadow-intensity=".4" environment-image="neutral" exposure="1.1" interaction-prompt="none">
-        </model-viewer>
-        <span class="model-status" id="modelStatus">Drag to rotate · Approximate garment model</span>
-      </div>
-      <a class="model-download" id="modelDownload" href="./assets/garments/offcut-winged-skull.glb" download hidden>Download .glb model</a>
-      <div class="clothing-rail" id="clothingRail" aria-label="Choose a garment"></div>
-      <div class="showroom-ui">
-        <div class="item-label" id="itemLabel" aria-live="polite" aria-atomic="true">
-          <h2 id="itemName">Winged Skull Tee</h2>
-          <span id="itemPrice">€48.00</span>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#171a1b" />
+    <meta name="description" content="Explore the Offcut collection at LOOPS. An interactive rail of graphic tees and everyday layers." />
+    <title>LOOPS® — The Offcut Collection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css?v=offcut-4" />
+    <link rel="preload" as="image" href="./assets/product-art/offcut-winged-skull.webp" />
+  </head>
+  <body>
+    <main>
+      <section class="experience" id="experience" aria-label="Offcut clothing showroom">
+        <header class="topbar">
+          <button class="wordmark" id="goTop" aria-label="LOOPS, return to showroom">loops<sup>®</sup></button>
+          <nav class="header-right" aria-label="Main navigation">
+            <button id="browseBtn">
+              Collection <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" /></svg>
+            </button>
+            <button id="cartBtn" aria-controls="cartPanel" aria-expanded="false">Bag <span id="cartCount">0</span></button>
+          </nav>
+        </header>
+        <h1>The collection<span>.</span></h1>
+        <div class="view-controls" role="group" aria-label="Showroom view">
+          <button id="railViewBtn" class="active" aria-pressed="true">Carousel</button>
+          <button id="modelViewBtn" aria-pressed="false">3D view</button>
         </div>
-        <div class="scene-controls">
-          <button id="prevBtn" aria-label="Previous garment"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button>
-          <span><span id="itemCurrent">01</span><span class="count-divider">/</span><span id="itemTotal">20</span></span>
-          <button id="nextBtn" aria-label="Next garment"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button>
-        <button id="playBtn" class="play-control" aria-label="Pause automatic browsing" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg></button></div>
-        <span class="rail-hint">A closer look, one piece at a time.</span>
-        <button class="details-trigger" id="detailsBtn">Explore this piece <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></button>
-      </div>
-    </section>
-    <section class="catalog" id="catalog" aria-labelledby="catalogTitle">
-      <div class="catalog-heading"><h2 id="catalogTitle">Find your next<br><em>favourite.</em></h2><p>Offcut originals and LOOPS archive pieces.<br>Choose a piece to take a closer look.</p></div>
-      <div class="catalog-toolbar">
-        <div class="catalog-filters" role="group" aria-label="Filter collection">
-          <button data-category="store" aria-pressed="true" class="active">All pieces</button>
-          <button data-category="tees" aria-pressed="false">T-shirts</button>
-          <button data-category="longsleeves" aria-pressed="false">Longsleeves</button>
-          <button data-category="layers" aria-pressed="false">Layers</button>
+        <div class="model-stage" id="modelStage" hidden>
+          <model-viewer
+            id="garmentModel"
+            alt="Approximate 3D garment model"
+            camera-controls
+            touch-action="pan-y"
+            shadow-intensity=".4"
+            environment-image="neutral"
+            exposure="1.1"
+            interaction-prompt="none"
+          >
+          </model-viewer>
+          <span class="model-status" id="modelStatus">Drag to rotate · Approximate garment model</span>
         </div>
-        <span id="catalogCount">20 pieces</span>
+        <a class="model-download" id="modelDownload" href="./assets/garments/offcut-winged-skull.glb" download hidden
+          >Download .glb model</a
+        >
+        <div class="clothing-rail" id="clothingRail" aria-label="Choose a garment"></div>
+        <div class="showroom-ui">
+          <div class="item-label" id="itemLabel" aria-live="polite" aria-atomic="true">
+            <h2 id="itemName">Winged Skull Tee</h2>
+            <span id="itemPrice">€48.00</span>
+          </div>
+          <div class="scene-controls">
+            <button id="prevBtn" aria-label="Previous garment">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
+            </button>
+            <span><span id="itemCurrent">01</span><span class="count-divider">/</span><span id="itemTotal">20</span></span>
+            <button id="nextBtn" aria-label="Next garment">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg>
+            </button>
+            <button id="playBtn" class="play-control" aria-label="Pause automatic browsing" aria-pressed="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12" /></svg>
+            </button>
+          </div>
+          <span class="rail-hint">Scroll over the rail to explore.</span>
+          <button class="details-trigger" id="detailsBtn">
+            Explore this piece <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" /></svg>
+          </button>
+        </div>
+      </section>
+      <section class="catalog" id="catalog" aria-labelledby="catalogTitle">
+        <div class="catalog-heading">
+          <h2 id="catalogTitle">Find your next<br /><em>favourite.</em></h2>
+          <p>Offcut originals and LOOPS archive pieces.<br />Choose a piece to take a closer look.</p>
+        </div>
+        <div class="catalog-toolbar">
+          <div class="catalog-filters" role="group" aria-label="Filter collection">
+            <button data-category="store" aria-pressed="true" class="active">All pieces</button>
+            <button data-category="tees" aria-pressed="false">T-shirts</button>
+            <button data-category="longsleeves" aria-pressed="false">Longsleeves</button>
+            <button data-category="layers" aria-pressed="false">Layers</button>
+          </div>
+          <span id="catalogCount">20 pieces</span>
+        </div>
+        <div class="catalog-grid" id="catalogGrid"></div>
+        <footer class="footer">
+          <span class="wordmark">loops<sup>®</sup></span
+          ><span>Offcut / The collection</span
+          ><button id="footerTop">
+            Back to the rail <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6" /></svg>
+          </button>
+        </footer>
+      </section>
+    </main>
+    <div class="overlay" id="overlay" hidden></div>
+    <aside class="side-panel" id="detailsPanel" role="dialog" aria-modal="true" aria-labelledby="detailName" aria-hidden="true" inert>
+      <div class="panel-top">
+        <span>Offcut / Piece details</span
+        ><button data-close aria-label="Close product details">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6" /></svg>
+        </button>
       </div>
-      <div class="catalog-grid" id="catalogGrid"></div>
-      <footer class="footer"><span class="wordmark">loops<sup>®</sup></span><span>Offcut / The collection</span><button id="footerTop">Back to the rail <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></footer>
-    </section>
-  </main>
-  <div class="overlay" id="overlay" hidden></div>
-  <aside class="side-panel" id="detailsPanel" role="dialog" aria-modal="true" aria-labelledby="detailName" aria-hidden="true" inert>
-    <div class="panel-top"><span>Offcut / Piece details</span><button data-close aria-label="Close product details"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
-    <div class="detail-art"><img id="detailArt" src="./assets/product-art/offcut-winged-skull.webp" alt="Winged Skull Tee"></div>
-    <div class="detail-name"><span id="detailCode">01 / OFFCUT</span><h2 id="detailName">Winged Skull Tee</h2><div id="detailPrice">€48.00</div></div>
-    <p class="detail-description" id="detailDescription"></p>
-    <fieldset class="detail-options"><legend>Size</legend><div class="sizes" id="sizeOptions"><button data-size="S" aria-pressed="false">S</button><button data-size="M" class="active" aria-pressed="true">M</button><button data-size="L" aria-pressed="false">L</button><button data-size="XL" aria-pressed="false">XL</button></div></fieldset>
-    <div class="detail-options color-option"><span>Colour</span><span id="selectedColor">Washed charcoal</span></div>
-    <button class="add-cart" id="addCart">Add to bag <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-    <p class="panel-note">Demo collection. Checkout is not connected.</p>
-  </aside>
-  <aside class="side-panel cart-panel" id="cartPanel" role="dialog" aria-modal="true" aria-labelledby="bagTitle" aria-hidden="true" inert>
-    <div class="panel-top"><span>Your bag / <span id="panelCartCount">00</span></span><button data-close aria-label="Close bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
-    <h2 class="bag-title" id="bagTitle">Good pieces.<br><em>Good company.</em></h2>
-    <div class="cart-items" id="cartItems"></div>
-    <div class="cart-summary"><div><span>Subtotal</span><b id="subtotal">€0.00</b></div><button id="checkoutBtn" disabled>Checkout coming soon</button><p class="panel-note">Demo storefront. No payments are processed.</p></div>
-  </aside>
-  <div class="toast" id="toast" role="status"></div>
-  <noscript><p class="noscript">Enable JavaScript to browse the interactive collection.</p></noscript>
-  <script src="./products.js?v=offcut-3" defer></script>
-  <script src="./ui.js?v=offcut-3" defer></script>
-</body>
+      <div class="detail-art"><img id="detailArt" src="./assets/product-art/offcut-winged-skull.webp" alt="Winged Skull Tee" /></div>
+      <div class="detail-name">
+        <span id="detailCode">01 / OFFCUT</span>
+        <h2 id="detailName">Winged Skull Tee</h2>
+        <div id="detailPrice">€48.00</div>
+      </div>
+      <p class="detail-description" id="detailDescription"></p>
+      <fieldset class="detail-options">
+        <legend>Size</legend>
+        <div class="sizes" id="sizeOptions">
+          <button data-size="S" aria-pressed="false">S</button><button data-size="M" class="active" aria-pressed="true">M</button
+          ><button data-size="L" aria-pressed="false">L</button><button data-size="XL" aria-pressed="false">XL</button>
+        </div>
+      </fieldset>
+      <div class="detail-options color-option"><span>Colour</span><span id="selectedColor">Washed charcoal</span></div>
+      <button class="add-cart" id="addCart">
+        Add to bag <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+      </button>
+      <p class="panel-note">Demo collection. Checkout is not connected.</p>
+    </aside>
+    <aside class="side-panel cart-panel" id="cartPanel" role="dialog" aria-modal="true" aria-labelledby="bagTitle" aria-hidden="true" inert>
+      <div class="panel-top">
+        <span>Your bag / <span id="panelCartCount">00</span></span
+        ><button data-close aria-label="Close bag">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6" /></svg>
+        </button>
+      </div>
+      <h2 class="bag-title" id="bagTitle">Good pieces.<br /><em>Good company.</em></h2>
+      <div class="cart-items" id="cartItems"></div>
+      <div class="cart-summary">
+        <div><span>Subtotal</span><b id="subtotal">€0.00</b></div>
+        <button id="checkoutBtn" disabled>Checkout coming soon</button>
+        <p class="panel-note">Demo storefront. No payments are processed.</p>
+      </div>
+    </aside>
+    <div class="toast" id="toast" role="status"></div>
+    <noscript><p class="noscript">Enable JavaScript to browse the interactive collection.</p></noscript>
+    <script src="./products.js?v=offcut-4" defer></script>
+    <script src="./ui.js?v=offcut-4" defer></script>
+  </body>
 </html>

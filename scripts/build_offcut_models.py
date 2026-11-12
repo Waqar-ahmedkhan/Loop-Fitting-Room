@@ -16,7 +16,7 @@ def build(source):
     image = Image.open(source).convert('RGBA')
     alpha = np.asarray(image.getchannel('A'))
     width, height = image.size
-    xs, ys = np.arange(0, width, 5), np.arange(100, height - 5, 5)
+    xs, ys = np.arange(0, width, 5), np.arange(100 if source.stem.startswith('offcut-') else 0, height - 5, 5)
     vertices, uv, faces, mapping = [], [], [], {}
     center_x = 270 if source.stem in ('offcut-winged-skull', 'offcut-heavy-black') else 255
     for j, y in enumerate(ys):
@@ -27,7 +27,7 @@ def build(source):
             px, py = (x - center_x) * .0018, (height - y) * .0018
             z = .036 + .012 * np.cos((x - center_x) / 180) + .004 * np.sin(x / 25 + y / 70)
             vertices.append((px, py, z))
-            uv.append((x / width, 1 - y / height))
+            uv.append((x / width, y / height))
     for j in range(len(ys) - 1):
         for i in range(len(xs) - 1):
             keys = [(i, j), (i + 1, j), (i, j + 1), (i + 1, j + 1)]
@@ -49,7 +49,7 @@ def build(source):
             a, b = edge[0]
             faces.extend([(a, b, a + count), (b, b + count, a + count)])
     # Back is neutral fabric: sample a small unprinted hem region instead of duplicating front graphics.
-    back_uv = [(0.55, 0.08)] * count
+    back_uv = [(0.55, 0.90)] * count
     positions = np.asarray(vertices + back, dtype='<f4')
     texcoords = np.asarray(uv + back_uv, dtype='<f4')
     triangles = np.asarray(faces, dtype='<u4')
@@ -91,11 +91,14 @@ def build(source):
     result = struct.pack('<III', 0x46546C67, 2, 28 + len(encoded) + len(binary))
     result += struct.pack('<II', len(encoded), 0x4E4F534A) + encoded
     result += struct.pack('<II', len(binary), 0x004E4942) + binary
-    target = ROOT / 'assets/garments' / f'{source.stem}.glb'
+    model_id = source.stem if source.stem.startswith('offcut-') else 'rail-' + source.stem.removesuffix('-cutout')
+    target = ROOT / 'assets/garments' / f'{model_id}.glb'
     target.write_bytes(result)
     print(f'{target.name}: {len(positions)} vertices, {len(faces)} faces')
 
 
 if __name__ == '__main__':
-    for source in sorted((ROOT / 'assets/product-art').glob('offcut-*.webp')):
+    sources = list((ROOT / 'assets/product-art').glob('offcut-*.webp'))
+    sources += list((ROOT / 'assets/product-art').glob('*-cutout.webp'))
+    for source in sorted(sources):
         build(source)
