@@ -3,83 +3,87 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#172027">
-  <meta name="description" content="LOOPS — an interactive archive of uncommon clothing. Explore the collection in a cinematic 3D showroom.">
-  <meta property="og:title" content="LOOPS® — Rare pieces. Re-worn.">
-  <meta property="og:description" content="Archive Y2K. A spatial fashion store.">
-  <title>LOOPS® — Interactive Archive Store</title>
-  <link rel="stylesheet" href="./styles.css">
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
-  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
+  <meta name="theme-color" content="#171a1b">
+  <meta name="description" content="Explore the Offcut collection at LOOPS. An interactive rail of graphic tees and everyday layers.">
+  <title>LOOPS® — The Offcut Collection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css?v=offcut-3">
+  <link rel="preload" as="image" href="./assets/product-art/offcut-winged-skull.webp">
 </head>
 <body>
-  <div class="preloader" id="preloader" aria-live="polite">
-    <div class="loader-head"><span class="logo-bubbles"><i></i><i></i></span> <span>ARCHIVE / 0027</span></div>
-    <div class="preloader-inner"><div class="loader-wordmark">loops<span>®</span></div><div class="loader-row"><span id="loaderState">PREPARING THE ARCHIVE</span><span id="loaderPercent">00%</span></div><div class="loader-line"><div id="loaderBar"></div></div></div>
-  </div>
-
-  <div class="experience" id="experience">
-    <div class="world-backdrop" aria-hidden="true"></div>
-    <div class="canvas-wrap" id="canvasWrap"><canvas id="webgl" aria-label="Interactive 3D showroom with hanging fashion garments"></canvas></div>
-    <div class="fallback-scene" id="fallbackScene" aria-hidden="true"><img id="fallbackImage" src="./assets/fallback-intro.jpg" alt=""></div>
-    <div class="ambient-grain" aria-hidden="true"></div>
-    <div class="title-back" id="titleBack" aria-hidden="true"><span>man /</span><span>clothing</span></div>
-    <div class="progress-rail" aria-hidden="true"><div id="progressFill"></div></div>
-
-    <header class="topbar">
-      <button class="brandmark" id="goTop" aria-label="LOOPS, return to beginning"><span></span><span></span></button>
-      <div class="header-right">
-        <button class="header-back" id="backBtn">← back</button>
-        <button id="menuBtn" aria-controls="menuPanel" aria-expanded="false">menu</button>
-        <button id="cartBtn" aria-controls="cartPanel" aria-expanded="false">// cart <sup id="cartCount">0</sup></button>
+  <main>
+    <section class="experience" id="experience" aria-label="Offcut clothing showroom">
+      <header class="topbar">
+        <button class="wordmark" id="goTop" aria-label="LOOPS, return to showroom">loops<sup>®</sup></button>
+        <nav class="header-right" aria-label="Main navigation">
+          <button id="browseBtn">Collection <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></button>
+          <button id="cartBtn" aria-controls="cartPanel" aria-expanded="false">Bag <span id="cartCount">0</span></button>
+        </nav>
+      </header>
+      <h1>The collection<span>.</span></h1>
+      <div class="view-controls" role="group" aria-label="Showroom view">
+        <button id="railViewBtn" class="active" aria-pressed="true">Carousel</button>
+        <button id="modelViewBtn" aria-pressed="false">3D view</button>
       </div>
-    </header>
-
-    <section class="intro" id="intro" aria-label="LOOPS archive introduction">
-      <div class="intro-eyebrow">Archive Y2K<br>Brand</div>
-      <div class="intro-lockup"><div class="brand-word">loops<sup>®</sup></div><div class="intro-yellow">Rare pieces.<br>Re-worn.<br><strong>2K27 →</strong></div></div>
-      <div class="intro-sub">Curated<br>Drops<br>Weekly</div>
-      <div class="intro-url">loops.studio / archive 027</div>
-      <div class="intro-bottom"><span>AN EXPERIMENT IN OWNERSHIP</span><button class="enter-link" id="enterBtn">ENTER THE STORE <span>↗</span></button><span class="intro-index">EST. 0027 &nbsp;—&nbsp; 001/010</span></div>
+      <div class="model-stage" id="modelStage" hidden>
+        <model-viewer id="garmentModel" alt="Approximate 3D garment model" camera-controls touch-action="pan-y"
+          shadow-intensity=".4" environment-image="neutral" exposure="1.1" interaction-prompt="none">
+        </model-viewer>
+        <span class="model-status" id="modelStatus">Drag to rotate · Approximate garment model</span>
+      </div>
+      <a class="model-download" id="modelDownload" href="./assets/garments/offcut-winged-skull.glb" download hidden>Download .glb model</a>
+      <div class="clothing-rail" id="clothingRail" aria-label="Choose a garment"></div>
+      <div class="showroom-ui">
+        <div class="item-label" id="itemLabel" aria-live="polite" aria-atomic="true">
+          <h2 id="itemName">Winged Skull Tee</h2>
+          <span id="itemPrice">€48.00</span>
+        </div>
+        <div class="scene-controls">
+          <button id="prevBtn" aria-label="Previous garment"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button>
+          <span><span id="itemCurrent">01</span><span class="count-divider">/</span><span id="itemTotal">20</span></span>
+          <button id="nextBtn" aria-label="Next garment"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button>
+        <button id="playBtn" class="play-control" aria-label="Pause automatic browsing" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg></button></div>
+        <span class="rail-hint">A closer look, one piece at a time.</span>
+        <button class="details-trigger" id="detailsBtn">Explore this piece <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></button>
+      </div>
     </section>
-
-    <div class="showroom-ui" id="showroomUI">
-      <div class="showroom-copy"><span class="micro-label">001—010 / THE COLLECTION</span><p>Pieces with<br>another life.</p><div class="micro-sub">A new perspective on the old and the rare.</div></div>
-      <div class="item-label" id="itemLabel"><span id="itemName">HARNESS TEE</span></div>
-      <div class="product-indicator"><span id="itemCurrent">05</span><span class="indicator-divider"></span><span id="itemTotal">10</span></div>
-      <div class="scene-controls"><button id="prevBtn" aria-label="Previous garment">←</button><span>DRAG TO EXPLORE</span><button id="nextBtn" aria-label="Next garment">→</button></div>
-      <button class="details-trigger" id="detailsBtn">EXPLORE THIS PIECE <span>↗</span></button>
-      <div class="category-bar" role="tablist" aria-label="Clothing category"><button data-category="store" role="tab" aria-selected="true" class="active"><span>Store</span></button><button data-category="man" role="tab" aria-selected="false"><span>Man</span></button><button data-category="woman" role="tab" aria-selected="false"><span>Woman</span></button></div>
-    </div>
-    <div class="scroll-notice" id="scrollNotice"><span class="scroll-cue"></span><span>SCROLL TO ENTER</span><span>↓</span></div>
-    <div class="webgl-notice" id="webglNotice" hidden>STATIC PREVIEW — THREE.JS UNAVAILABLE. OPEN WITH INTERNET ACCESS FOR INTERACTIVE 3D.</div>
-    <div class="cursor-dot" id="cursorDot"><span>VIEW</span></div>
-  </div>
-
-  <div class="scroll-journey" id="scrollJourney" aria-hidden="true"><div class="journey-marker"></div></div>
-  <section class="catalog" id="catalog" aria-label="Explore the archive">
-    <div class="catalog-heading"><span class="section-index">ARCHIVE / 2027</span><h2>Not new.<br><em>Just rare.</em></h2><div class="catalog-heading-side"><p>Every garment has a story.<br>This one continues with you.</p><span>SELECTED PIECES / SERIES 001</span></div></div>
-    <div class="filter-row"><span id="catalogCount">10 SELECTED OBJECTS</span><span class="filter-divider"></span><span>CURATED FOR THE NEXT LIFE</span></div>
-    <div class="catalog-grid" id="catalogGrid"></div>
-    <footer class="footer"><div>loops<sup>®</sup></div><p>THE FUTURE IS ALREADY HERE.<br>IT'S JUST BEEN WORN BEFORE.</p><button id="footerTop">BACK TO THE SHOWROOM ↗</button><small>CONCEPT STORE / INTERACTIVE 3D DEMONSTRATION</small></footer>
-  </section>
-
+    <section class="catalog" id="catalog" aria-labelledby="catalogTitle">
+      <div class="catalog-heading"><h2 id="catalogTitle">Find your next<br><em>favourite.</em></h2><p>Offcut originals and LOOPS archive pieces.<br>Choose a piece to take a closer look.</p></div>
+      <div class="catalog-toolbar">
+        <div class="catalog-filters" role="group" aria-label="Filter collection">
+          <button data-category="store" aria-pressed="true" class="active">All pieces</button>
+          <button data-category="tees" aria-pressed="false">T-shirts</button>
+          <button data-category="longsleeves" aria-pressed="false">Longsleeves</button>
+          <button data-category="layers" aria-pressed="false">Layers</button>
+        </div>
+        <span id="catalogCount">20 pieces</span>
+      </div>
+      <div class="catalog-grid" id="catalogGrid"></div>
+      <footer class="footer"><span class="wordmark">loops<sup>®</sup></span><span>Offcut / The collection</span><button id="footerTop">Back to the rail <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></footer>
+    </section>
+  </main>
   <div class="overlay" id="overlay" hidden></div>
-  <aside class="side-panel" id="detailsPanel" aria-label="Product details" aria-hidden="true">
-    <div class="panel-top"><span>ITEM DETAILS / LOOPS</span><button data-close aria-label="Close product details">✕</button></div>
-    <div class="detail-art"><img id="detailArt" src="./assets/product-art/05-harness-tee.webp" alt="Current garment"></div>
-    <div class="detail-name"><span id="detailCode">NO. 005 / ARCHIVE</span><h3 id="detailName">Harness Tee</h3><div id="detailPrice">$95.00</div></div>
+  <aside class="side-panel" id="detailsPanel" role="dialog" aria-modal="true" aria-labelledby="detailName" aria-hidden="true" inert>
+    <div class="panel-top"><span>Offcut / Piece details</span><button data-close aria-label="Close product details"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+    <div class="detail-art"><img id="detailArt" src="./assets/product-art/offcut-winged-skull.webp" alt="Winged Skull Tee"></div>
+    <div class="detail-name"><span id="detailCode">01 / OFFCUT</span><h2 id="detailName">Winged Skull Tee</h2><div id="detailPrice">€48.00</div></div>
     <p class="detail-description" id="detailDescription"></p>
-    <div class="detail-options"><div class="opt-header">SIZE <span id="sizeHelp">SIZE GUIDE ↗</span></div><div class="sizes" id="sizeOptions"><button data-size="S">S</button><button data-size="M" class="active">M</button><button data-size="L">L</button><button data-size="XL">XL</button></div></div>
-    <div class="detail-options"><div class="opt-header">COLOUR <span id="selectedColor">ORIGINAL</span></div><div class="swatches" id="colorOptions"></div></div>
-    <button class="add-cart" id="addCart">ADD TO ARCHIVE BAG <span>↗</span></button>
-    <div class="panel-note">Demonstration collection. Purchases are disabled until a checkout provider is connected.</div>
+    <fieldset class="detail-options"><legend>Size</legend><div class="sizes" id="sizeOptions"><button data-size="S" aria-pressed="false">S</button><button data-size="M" class="active" aria-pressed="true">M</button><button data-size="L" aria-pressed="false">L</button><button data-size="XL" aria-pressed="false">XL</button></div></fieldset>
+    <div class="detail-options color-option"><span>Colour</span><span id="selectedColor">Washed charcoal</span></div>
+    <button class="add-cart" id="addCart">Add to bag <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+    <p class="panel-note">Demo collection. Checkout is not connected.</p>
   </aside>
-  <aside class="side-panel cart-panel" id="cartPanel" aria-label="Archive bag" aria-hidden="true"><div class="panel-top"><span>YOUR ARCHIVE BAG / <span id="panelCartCount">00</span></span><button data-close aria-label="Close cart">✕</button></div><h3 class="bag-title">Good things<br>come around.</h3><div class="cart-items" id="cartItems"></div><div class="cart-summary"><div><span>SUBTOTAL</span><b id="subtotal">$0.00</b></div><button id="checkoutBtn" disabled>CHECKOUT COMING SOON ↗</button><small>Demo storefront — no transactions are processed.</small></div></aside>
-  <aside class="menu-panel" id="menuPanel" aria-label="Site menu" aria-hidden="true"><button class="menu-close" data-close aria-label="Close navigation">✕</button><span class="menu-topline">UNIFORM FOR THE UNCOMMON</span><nav><button data-nav="intro">01 &nbsp; Home</button><button data-nav="showroom">02 &nbsp; 3D Showroom</button><button data-nav="catalog">03 &nbsp; The Archive</button><button data-nav="about">04 &nbsp; About</button></nav><div class="menu-bottom">LOOPS STUDIO / NEW OBJECTS, OLD SOUL.</div></aside>
+  <aside class="side-panel cart-panel" id="cartPanel" role="dialog" aria-modal="true" aria-labelledby="bagTitle" aria-hidden="true" inert>
+    <div class="panel-top"><span>Your bag / <span id="panelCartCount">00</span></span><button data-close aria-label="Close bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+    <h2 class="bag-title" id="bagTitle">Good pieces.<br><em>Good company.</em></h2>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-summary"><div><span>Subtotal</span><b id="subtotal">€0.00</b></div><button id="checkoutBtn" disabled>Checkout coming soon</button><p class="panel-note">Demo storefront. No payments are processed.</p></div>
+  </aside>
   <div class="toast" id="toast" role="status"></div>
-  <script src="./ui.js" defer></script>
+  <noscript><p class="noscript">Enable JavaScript to browse the interactive collection.</p></noscript>
+  <script src="./products.js?v=offcut-3" defer></script>
+  <script src="./ui.js?v=offcut-3" defer></script>
 </body>
 </html>
