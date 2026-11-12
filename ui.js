@@ -84,7 +84,6 @@
     $('detailDescription').textContent = product.description;
     $('detailArt').src = `./assets/product-art/${product.image || product.id}.webp`;
     $('detailArt').alt = product.name;
-    $('detailArt').parentElement.classList.toggle('studio-art', product.artStyle === 'studio');
     $('selectedColor').textContent = product.colors[0][0];
     document.querySelectorAll('[data-size]').forEach((button) => {
       const active = button.dataset.size === state.size;
@@ -330,8 +329,8 @@
       if (index === state.selected) openPanel('details');
       else select(index);
     });
-    rail.addEventListener('pointerenter', (event) => {
-      if (event.pointerType === 'mouse') isRailHovered = true;
+    rail.addEventListener('pointermove', (event) => {
+      if (event.pointerType === 'mouse') isRailHovered = Boolean(event.target.closest('.rail-piece'));
     });
     rail.addEventListener('pointerleave', () => {
       isRailHovered = false;
@@ -401,7 +400,7 @@
   $('clothingRail').innerHTML = products
     .map(
       (product, index) => `
-    <button class="rail-piece ${product.artStyle === 'studio' ? 'studio-art' : ''}" data-rail-index="${index}">
+    <button class="rail-piece" data-rail-index="${index}">
       <img src="./assets/product-art/${product.image || product.id}.webp" alt="" width="510" height="530" decoding="async" draggable="false">
     </button>`
     )

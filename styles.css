@@ -177,12 +177,6 @@ h1 span {
 .rail-piece:not(.is-selected):hover {
   filter: brightness(0.9);
 }
-.rail-piece.studio-art img {
-  border-radius: 3px;
-  object-fit: contain;
-  padding: 0 38px;
-  filter: drop-shadow(0 16px 22px #0005);
-}
 .showroom-ui {
   position: absolute;
   inset: 0;
@@ -482,9 +476,6 @@ h1 span {
   height: 100%;
   object-fit: contain;
   padding: 12px;
-}
-.detail-art.studio-art img {
-  padding: 0;
 }
 .detail-name > span {
   font-size: 10px;

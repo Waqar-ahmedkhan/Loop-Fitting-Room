@@ -99,6 +99,5 @@ def build(source):
 
 if __name__ == '__main__':
     sources = list((ROOT / 'assets/product-art').glob('offcut-*.webp'))
-    sources += list((ROOT / 'assets/product-art').glob('*-cutout.webp'))
     for source in sorted(sources):
         build(source)
